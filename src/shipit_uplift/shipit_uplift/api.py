@@ -11,6 +11,7 @@ from sqlalchemy.exc import IntegrityError
 from backend_common.auth import auth
 from backend_common.db import db
 from backend_common import log
+from cli_common.taskcluster import TaskclusterClient
 from shipit_uplift.helpers import gravatar
 from shipit_uplift.models import (
     BugAnalysis, BugResult, Contributor, BugContributor, PatchStatus
@@ -364,3 +365,15 @@ def create_patch_status(bugzilla_id):
         }, 409  # Conflict
 
     return serialize_patch_status(ps)
+
+
+@auth.require_scopes(SCOPES_USER)
+def load_hook_artifact(group, hook, artifact):
+    """
+    Serve an artifact from the last run of
+    a specified source hook
+    Only support anonymous & public artifacts for now
+    """
+    artifact = 'public/' + artifact
+    client = TaskclusterClient('', '')  # anonymous
+    return client.get_hook_artifact(group, hook, artifact)
