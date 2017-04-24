@@ -138,7 +138,8 @@ def build_files():
 def go(secrets, client_id=None, client_token=None):
     tc_client = TaskclusterClient(client_id, client_token)
 
-    secrets = tc_client.get_secrets(secrets, [COVERALLS_TOKEN_FIELD, CODECOV_TOKEN_FIELD])
+    required_fields = [COVERALLS_TOKEN_FIELD, CODECOV_TOKEN_FIELD]
+    secrets = tc_client.get_secrets(secrets, required_fields)
 
     coveralls_token = secrets[COVERALLS_TOKEN_FIELD]
     codecov_token = secrets[CODECOV_TOKEN_FIELD]

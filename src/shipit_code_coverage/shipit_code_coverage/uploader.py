@@ -19,7 +19,7 @@ def coveralls(data):
 
 
 def codecov(data, commit_sha, token):
-    r = requests.post('https://codecov.io/upload/v4?commit=%s&token=%s&build=1&job=1&service=custom' % (commit_sha, token), headers={
+    r = requests.post('https://codecov.io/upload/v4?commit=%s&token=%s&build=1&job=1&service=custom' % (commit_sha, token), headers={  # NOQA
         'Accept': 'text/plain',
     })
 
