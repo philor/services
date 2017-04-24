@@ -191,7 +191,7 @@ update msg model user bugzilla =
 
         -- Load all Analysis
         FetchAllAnalysis ->
-            ( { model | all_analysis = Loading }
+            ( { model | all_analysis = Loading, current_analysis = NotAsked }
             , fetchAllAnalysis model user
             )
 

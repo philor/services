@@ -14,12 +14,14 @@ import Hawk
 import Utils
 import App.Utils exposing (eventLink)
 import App.Home as Home
+import App.CodeCoverage as CodeCoverage
 import App.ReleaseDashboard as ReleaseDashboard
 
 
 type Page
     = Home
     | ReleaseDashboard
+    | CodeCoverage
     | Bugzilla
 
 
@@ -33,6 +35,7 @@ type
       -- App code
     | ShowPage Page
     | ReleaseDashboardMsg ReleaseDashboard.Msg
+    | CodeCoverageMsg CodeCoverage.Msg
 
 
 type alias Role =
@@ -49,6 +52,7 @@ type alias Model =
         -- App code
     , current_page : Page
     , release_dashboard : ReleaseDashboard.Model
+    , code_coverage : CodeCoverage.Model
     }
 
 
@@ -71,14 +75,18 @@ init flags =
             User.init flags.taskcluster
 
         -- App init
-        ( dashboard, newCmd ) =
+        ( dashboard, dashboardCmd ) =
             ReleaseDashboard.init flags.backend_uplift_url
+
+        ( code_coverage, ccCmd ) =
+            CodeCoverage.init flags.backend_uplift_url
 
         model =
             { bugzilla = bz
             , user = user
             , current_page = Home
             , release_dashboard = dashboard
+            , code_coverage = code_coverage
             }
     in
         ( model
@@ -87,6 +95,7 @@ init flags =
             [ -- Extensions integration
               Cmd.map BugzillaMsg bzCmd
             , Cmd.map UserMsg userCmd
+            , Cmd.map CodeCoverageMsg ccCmd
             , loadAllAnalysis model
             ]
         )
@@ -165,6 +174,15 @@ update msg model =
                 , Cmd.map ReleaseDashboardMsg cmd
                 )
 
+        CodeCoverageMsg ccMsg ->
+            let
+                ( code_coverage, cmd ) =
+                    CodeCoverage.update ccMsg model.code_coverage model.user
+            in
+                ( { model | code_coverage = code_coverage, current_page = CodeCoverage }
+                , Cmd.map CodeCoverageMsg cmd
+                )
+
 
 loadAllAnalysis : Model -> Cmd Msg
 loadAllAnalysis model =
@@ -214,6 +232,9 @@ viewPage model =
 
         Bugzilla ->
             Html.map BugzillaMsg (Bugzilla.view model.bugzilla)
+
+        CodeCoverage ->
+            Html.map CodeCoverageMsg (CodeCoverage.view model.code_coverage)
 
         ReleaseDashboard ->
             Html.map ReleaseDashboardMsg (ReleaseDashboard.view model.release_dashboard model.bugzilla)
@@ -317,6 +338,10 @@ viewNavDashboard model =
 
         Success allAnalysis ->
             (List.map viewNavAnalysis allAnalysis)
+                ++ [ li [ class "nav-item" ]
+                        [ pageLink CodeCoverage [ class "nav-link" ] [ text "Code Coverage" ]
+                        ]
+                   ]
 
 
 viewDashboardStatus : ReleaseDashboard.Model -> Html Msg
@@ -464,6 +489,10 @@ location2messages location =
                         [ ShowPage Bugzilla
                         ]
 
+                    "code-coverage" ->
+                        [ ShowPage CodeCoverage
+                        ]
+
                     "release-dashboard" ->
                         let
                             messages =
@@ -518,6 +547,11 @@ delta2url previous current =
             Bugzilla ->
                 Maybe.map
                     (Builder.prependToPath [ "bugzilla" ])
+                    (Just builder)
+
+            CodeCoverage ->
+                Maybe.map
+                    (Builder.prependToPath [ "code-coverage" ])
                     (Just builder)
 
             _ ->
