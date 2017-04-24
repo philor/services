@@ -120,6 +120,7 @@ update msg model =
                 ( user, userCmd ) =
                     User.update userMsg model.user
 
+                model_ = { model | user = user }
                 l =
                     Debug.log "new user" user
 
@@ -129,13 +130,13 @@ update msg model =
                         [ [ Cmd.map UserMsg userCmd ]
                         , case userMsg of
                             User.Logged _ ->
-                                [ loadAllAnalysis model ]
+                                [ loadAllAnalysis model_ ]
 
                             _ ->
                                 []
                         ]
             in
-                ( { model | user = user }, Cmd.batch commands )
+                ( model_, Cmd.batch commands )
 
         HawkRequest hawkMsg ->
             let
@@ -170,7 +171,7 @@ update msg model =
                 ( dashboard, cmd ) =
                     ReleaseDashboard.update dashMsg model.release_dashboard model.user model.bugzilla
             in
-                ( { model | release_dashboard = dashboard, current_page = ReleaseDashboard }
+                ( { model | release_dashboard = dashboard }
                 , Cmd.map ReleaseDashboardMsg cmd
                 )
 
@@ -179,7 +180,7 @@ update msg model =
                 ( code_coverage, cmd ) =
                     CodeCoverage.update ccMsg model.code_coverage model.user
             in
-                ( { model | code_coverage = code_coverage, current_page = CodeCoverage }
+                ( { model | code_coverage = code_coverage }
                 , Cmd.map CodeCoverageMsg cmd
                 )
 
