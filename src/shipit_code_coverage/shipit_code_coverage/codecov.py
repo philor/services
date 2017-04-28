@@ -9,6 +9,7 @@ from cli_common.log import get_logger
 
 from shipit_code_coverage import taskcluster
 from shipit_code_coverage import coveralls
+from shipit_code_coverage import coverage_by_dir
 
 
 logger = get_logger(__name__)
@@ -155,3 +156,5 @@ def go(secrets, client_id=None, client_token=None):
     output = generate_info(revision, coveralls_token)
 
     coveralls.upload(output)
+
+    coverage_by_dir.generate(REPO_DIR)
